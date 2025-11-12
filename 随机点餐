@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公主请点餐 - 随机选择器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #ffeef8 0%, #ffe0f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(255, 182, 193, 0.2);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
+            z-index: -1;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 32px;
+            color: #d63384;
+            margin-bottom: 30px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .title::after {
+            content: '👑';
+            position: absolute;
+            right: 15%;
+            top: -10px;
+            font-size: 24px;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+        }
+
+        .input-section {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid rgba(214, 51, 132, 0.15);
+            border-radius: 14px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(214, 51, 132, 0.4);
+            box-shadow: 0 0 0 3px rgba(214, 51, 132, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.03);
+        }
+
+        .add-btn {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #ff85b3 0%, #ff6b9c 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 107, 156, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(255, 107, 156, 0.35);
+        }
+
+        .add-btn:active {
+            transform: translateY(1px);
+        }
+
+        .add-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(30deg);
+            transition: all 0.6s ease;
+        }
+
+        .add-btn:hover::after {
+            transform: rotate(30deg) translate(20%, 20%);
+        }
+
+        .options-list {
+            margin-bottom: 30px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .options-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .options-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 10px;
+        }
+
+        .options-list::-webkit-scrollbar-thumb {
+            background: rgba(214, 51, 132, 0.2);
+            border-radius: 10px;
+        }
+
+        .option-item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 14px 20px;
+            margin-bottom: 12px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+
+        .option-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            border-color: rgba(214, 51, 132, 0.1);
+        }
+
+        .option-text {
+            color: #5a3e4a;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .delete-btn {
+            background: rgba(255, 107, 156, 0.1);
+            color: #ff6b9c;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover {
+            background: rgba(255, 107, 156, 0.2);
+            transform: scale(1.1);
+        }
+
+        .action-section {
+            text-align: center;
+        }
+
+        .start-btn {
+            padding: 18px 45px;
+            background: linear-gradient(135deg, #ff6b9c 0%, #d63384 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 18px rgba(214, 51, 132, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 22px rgba(214, 51, 132, 0.4);
+        }
+
+        .start-btn:active {
+            transform: translateY(1px);
+        }
+
+        .start-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(30deg);
+            transition: all 0.6s ease;
+        }
+
+        .start-btn:hover::after {
+            transform: rotate(30deg) translate(20%, 20%);
+        }
+
+        .start-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .countdown {
+            font-size: 52px;
+            font-weight: 700;
+            color: #d63384;
+            margin: 30px 0;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .result {
+            background: linear-gradient(135deg, rgba(255, 182, 193, 0.15) 0%, rgba(255, 218, 185, 0.15) 100%);
+            border: 2px dashed rgba(214, 51, 132, 0.3);
+            border-radius: 20px;
+            padding: 35px 30px;
+            margin-top: 30px;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: all 0.5s ease;
+        }
+
+        .result-label {
+            font-size: 16px;
+            color: #d63384;
+            margin-bottom: 12px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .result-text {
+            font-size: 32px;
+            color: #5a3e4a;
+            font-weight: 700;
+            margin: 10px 0;
+            position: relative;
+            display: inline-block;
+        }
+
+        .result-text::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff6b9c, transparent);
+            border-radius: 3px;
+        }
+
+        .result-emoji {
+            font-size: 42px;
+            margin-top: 15px;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-8px); }
+        }
+
+        .empty-state {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 14px;
+            border: 1px dashed rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🎀 公主请点餐 🎀</h1>
+        
+        <div class="input-section">
+            <input 
+                type="text" 
+                class="input-field" 
+                id="optionInput" 
+                placeholder="输入待选项..."
+                maxlength="20"
+            >
+            <button class="add-btn" onclick="addOption()">添加</button>
+        </div>
+
+        <div class="options-list" id="optionsList">
+            <div class="empty-state" id="emptyState">暂无选项，请添加至少2个选项</div>
+        </div>
+
+        <div class="action-section">
+            <button class="start-btn" id="startBtn" onclick="startRandom()">
+                开始随机选择
+            </button>
+        </div>
+
+        <div class="countdown" id="countdown"></div>
+
+        <div class="result" id="result" style="display: none;">
+            <div class="result-label">🎉 今天吃这个！🎉</div>
+            <div class="result-text" id="resultText"></div>
+            <div class="result-emoji" id="resultEmoji"></div>
+        </div>
+    </div>
+
+    <script>
+        let options = [];
+        let isRunning = false;
+
+        // 从localStorage加载选项
+        window.onload = function() {
+            const savedOptions = localStorage.getItem('foodOptions');
+            if (savedOptions) {
+                options = JSON.parse(savedOptions);
+                renderOptions();
+            }
+            
+            // 回车键添加
+            document.getElementById('optionInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addOption();
+                }
+            });
+        };
+
+        function addOption() {
+            const input = document.getElementById('optionInput');
+            const optionText = input.value.trim();
+            
+            if (optionText === '') {
+                alert('请输入选项内容！');
+                return;
+            }
+            
+            if (options.length >= 20) {
+                alert('最多只能添加20个选项哦！');
+                return;
+            }
+            
+            options.push(optionText);
+            input.value = '';
+            input.focus();
+            
+            saveOptions();
+            renderOptions();
+        }
+
+        function deleteOption(index) {
+            options.splice(index, 1);
+            saveOptions();
+            renderOptions();
+        }
+
+        function renderOptions() {
+            const optionsList = document.getElementById('optionsList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (options.length === 0) {
+                optionsList.innerHTML = '<div class="empty-state" id="emptyState">暂无选项，请添加至少2个选项</div>';
+                return;
+            }
+            
+            optionsList.innerHTML = options.map((option, index) => `
+                <div class="option-item">
+                    <span class="option-text">${option}</span>
+                    <button class="delete-btn" onclick="deleteOption(${index})" title="删除">×</button>
+                </div>
+            `).join('');
+        }
+
+        function saveOptions() {
+            localStorage.setItem('foodOptions', JSON.stringify(options));
+        }
+
+        function startRandom() {
+            if (isRunning) return;
+            
+            if (options.length < 2) {
+                alert('请至少添加2个选项才能开始选择！');
+                return;
+            }
+            
+            isRunning = true;
+            const startBtn = document.getElementById('startBtn');
+            const countdown = document.getElementById('countdown');
+            const result = document.getElementById('result');
+            
+            startBtn.disabled = true;
+            result.style.display = 'none';
+            
+            // 倒计时
+            let count = 3;
+            countdown.innerHTML = `<div>${count}</div>`;
+            
+            const countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdown.innerHTML = `<div>${count}</div>`;
+                } else {
+                    clearInterval(countdownInterval);
+                    countdown.innerHTML = '';
+                    
+                    // 随机选择
+                    const randomIndex = Math.floor(Math.random() * options.length);
+                    const selectedOption = options[randomIndex];
+                    
+                    // 显示结果
+                    document.getElementById('resultText').textContent = selectedOption;
+                    
+                    // 随机emoji
+                    const emojis = ['🍽️', '🤤', '✨', '🎊', '😋', '🌟', '💖', '👑', '🎉', '💕'];
+                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                    document.getElementById('resultEmoji').textContent = randomEmoji;
+                    
+                    result.style.display = 'block';
+                    
+                    // 重置状态
+                    isRunning = false;
+                    startBtn.disabled = false;
+                    
+                    // 滚动到结果
+                    result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
